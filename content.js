@@ -13,7 +13,9 @@ function getTextFromElement(el) {
     if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") return el.value || "";
     return "";
 }
+
 let isApplyingSuggestion = false;
+
 function applySuggestion(target, original, corrected) {
     const currentText = getTextFromElement(target);
     if (!currentText.includes(original)) return false;
@@ -98,7 +100,116 @@ async function handleInput(e) {
         );
     }, 2000);
 }
+
+function extractPageContent() {
+    const article = document.querySelector('article');
+    const main = document.querySelector('main');
+    const contentDiv = document.querySelector('[role="main"]');
+    
+    let content = '';
+    
+    if (article) {
+        content = article.innerText;
+    } else if (main) {
+        content = main.innerText;
+    } else if (contentDiv) {
+        content = contentDiv.innerText;
+    } else {
+        const paragraphs = Array.from(document.querySelectorAll('p'));
+        content = paragraphs.map(p => p.innerText).join('\n\n');
+    }
+    if (!content || content.trim().length < 50) {
+        content = document.body.innerText;
+    }
+    content = content
+        .replace(/\s+/g, ' ')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    const maxLength = 5000;
+    if (content.length > maxLength) {
+        content = content.substring(0, maxLength) + '...';
+    }
+    
+    return content;
+}
+
+async function summarizePage() {
+    try {
+        const pageContent = extractPageContent();
+        
+        if (!pageContent || pageContent.length < 100) {
+            return {
+                error: "Not enough content to summarize on this page."
+            };
+        }
+        if (aiEngine.isAIAvailable()) {
+            const summary = await aiEngine.summarizeText(pageContent);
+            if (summary) {
+                return { summary };
+            }
+        }
+        const offlineSummary = generateOfflineSummary(pageContent);
+        return { summary: offlineSummary };
+        
+    } catch (error) {
+        console.error("Summarization error:", error);
+        return {
+            error: "Failed to generate summary. Please try again."
+        };
+    }
+}
+
+function generateOfflineSummary(text) {
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 20);
+    
+    if (sentences.length === 0) {
+        return "No significant content found to summarize.";
+    }
+    
+    const summaryLength = Math.min(5, Math.max(3, Math.floor(sentences.length * 0.2)));
+    const wordCounts = sentences.map(sentence => {
+        const words = sentence.trim().split(/\s+/);
+        return {
+            sentence: sentence.trim(),
+            wordCount: words.length,
+            importanceScore: calculateImportanceScore(sentence, words)
+        };
+    });
+    wordCounts.sort((a, b) => b.importanceScore - a.importanceScore);
+    const topSentences = wordCounts.slice(0, summaryLength);
+    const summary = topSentences
+        .map(item => item.sentence)
+        .join('. ') + '.';
+    
+    return summary;
+}
+
+function calculateImportanceScore(sentence, words) {
+    const importantWords = ['important', 'key', 'main', 'significant', 'essential', 
+                           'critical', 'primary', 'major', 'fundamental', 'crucial'];
+    
+    let score = 0;
+    const lowerSentence = sentence.toLowerCase();
+    importantWords.forEach(word => {
+        if (lowerSentence.includes(word)) {
+            score += 2;
+        }
+    });
+    const hasNumbers = /\d+/.test(sentence);
+    if (hasNumbers) score += 1;
+    const hasQuotes = sentence.includes('"') || sentence.includes("'");
+    if (hasQuotes) score += 1;
+    if (words.length >= 15 && words.length <= 30) {
+        score += 1;
+    }
+    const startsWithCapital = /^[A-Z][a-z]/.test(sentence.trim());
+    if (startsWithCapital) score += 0.5;
+    
+    return score + (words.length * 0.1);
+}
+
 let isInitialized = false;
+
 async function init() {
     if (isInitialized) return;
     isInitialized = true;
@@ -185,6 +296,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 setTimeout(() => tooltipManager.hideStatus(), 3000);
             }
         });
+    }
+    
+    if (request.action === 'summarizePage') {
+        summarizePage().then(result => {
+            sendResponse(result);
+        });
+        return true;
     }
 });
 

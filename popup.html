@@ -224,6 +224,98 @@
             vertical-align: middle;
             margin-right: 6px;
         }
+
+        .summarize-btn {
+            width: 100%;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            margin-bottom: 16px;
+        }
+
+        .summarize-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        }
+
+        .summarize-btn:active {
+            transform: translateY(0);
+        }
+
+        .summarize-btn:disabled {
+            background: linear-gradient(135deg, #9CA3AF, #6B7280);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .summary-container {
+            background: linear-gradient(135deg, #FFFFFF, #F8FAFC);
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 2px solid #E0E7FF;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .summary-container.show {
+            display: block;
+        }
+
+        .summary-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #6366F1;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .summary-text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #374151;
+        }
+
+        .summary-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .summary-container::-webkit-scrollbar-track {
+            background: #F3F4F6;
+            border-radius: 3px;
+        }
+
+        .summary-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #C7D2FE, #A5B4FC);
+            border-radius: 3px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .summarize-btn.loading svg {
+            animation: spin 1s linear infinite;
+        }
     </style>
 </head>
 <body>
@@ -236,6 +328,23 @@
                 </svg>
                 <span>Offline</span>
             </div>
+        </div>
+        
+        <button id="summarizeBtn" class="summarize-btn">
+            <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+            </svg>
+            <span>Summarize This Page</span>
+        </button>
+
+        <div id="summaryContainer" class="summary-container">
+            <div class="summary-title">
+                <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor" style="width: 16px; height: 16px;">
+                    <path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 17.2l-6.4 4 2.4-7.2-6-4.8h7.6z"/>
+                </svg>
+                Page Summary
+            </div>
+            <div id="summaryText" class="summary-text"></div>
         </div>
         
         <div class="toggle-section">
@@ -282,7 +391,7 @@
         </div>
         
         <div class="footer">
-            Powered by AI • v1.0.0
+            Powered by AI • v2.0.2
         </div>
     </div>
     <script src="popup.js"></script>

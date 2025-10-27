@@ -5,6 +5,9 @@ document.addEventListener("DOMContentLoaded", async function () {
   const wordsImproved = document.getElementById("wordsImproved");
   const modeIndicator = document.getElementById("modeIndicator");
   const toggleTTS = document.getElementById("toggleTTS");
+  const summarizeBtn = document.getElementById("summarizeBtn");
+  const summaryContainer = document.getElementById("summaryContainer");
+  const summaryText = document.getElementById("summaryText");
 
   chrome.storage.local.get(
     ["enabled", "correctionsCount", "wordsImproved"],
@@ -15,6 +18,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       updateExtensionBadge(toggle.checked);
     }
   );
+  
   chrome.storage.sync.get(["enableTTS"], (result) => {
     toggleTTS.checked = result.enableTTS !== false;
   });
@@ -22,6 +26,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   toggleTTS.addEventListener("change", function () {
     chrome.storage.sync.set({ enableTTS: this.checked });
   });
+  
   toggle.addEventListener("change", function () {
     const isEnabled = this.checked;
     chrome.storage.local.set({ enabled: isEnabled }, () => {
@@ -35,6 +40,51 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
       });
     });
+  });
+  summarizeBtn.addEventListener("click", async function() {
+    try {
+      summarizeBtn.disabled = true;
+      summarizeBtn.classList.add('loading');
+      summarizeBtn.innerHTML = `
+        <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" opacity="0.3"/>
+          <path d="M12 2a10 10 0 0110 10" stroke="currentColor" stroke-width="3" fill="none"/>
+        </svg>
+        <span>Summarizing...</span>
+      `;
+
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tabs[0]) {
+        throw new Error("No active tab found");
+      }
+
+      const response = await chrome.tabs.sendMessage(tabs[0].id, {
+        action: "summarizePage"
+      });
+
+      if (response && response.summary) {
+        summaryText.textContent = response.summary;
+        summaryContainer.classList.add('show');
+      } else if (response && response.error) {
+        summaryText.textContent = response.error;
+        summaryContainer.classList.add('show');
+      } else {
+        throw new Error("Failed to generate summary");
+      }
+    } catch (error) {
+      console.error("Summarization error:", error);
+      summaryText.textContent = "Unable to summarize this page. Please try again or ensure the page has content to summarize.";
+      summaryContainer.classList.add('show');
+    } finally {
+      summarizeBtn.disabled = false;
+      summarizeBtn.classList.remove('loading');
+      summarizeBtn.innerHTML = `
+        <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+        </svg>
+        <span>Summarize This Page</span>
+      `;
+    }
   });
 
   checkAIStatus();
@@ -70,6 +120,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     } catch (error) {
       console.log("Could not get AI status from content script:", error);
     }
+    
     const hasAISupport = await checkSystemAISupport();
     if (hasAISupport) {
       updateStatus("available", "AI Model Ready", "ai");
@@ -112,6 +163,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         modeIndicator.style.borderColor = "#10B981";
       }
     }
+    
     let statusIcon, statusClass;
     switch (status) {
       case "available":
