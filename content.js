@@ -13,12 +13,14 @@ function getTextFromElement(el) {
     if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") return el.value || "";
     return "";
 }
-
+let isApplyingSuggestion = false;
 function applySuggestion(target, original, corrected) {
     const currentText = getTextFromElement(target);
     if (!currentText.includes(original)) return false;
 
     try {
+        isApplyingSuggestion = true;
+        
         if (target.isContentEditable) {
             target.textContent = currentText.replace(original, corrected);
             target.dispatchEvent(new Event('input', { bubbles: true }));
@@ -38,8 +40,10 @@ function applySuggestion(target, original, corrected) {
         
         tooltipManager.showStatus("Suggestion applied!", "success");
         setTimeout(() => tooltipManager.hideStatus(), 2000);
+        isApplyingSuggestion = false;
         return true;
     } catch (error) {
+        isApplyingSuggestion = false;
         console.error("Failed to apply suggestion:", error);
         tooltipManager.showStatus("Failed to apply suggestion", "error");
         setTimeout(() => tooltipManager.hideStatus(), 2000);
@@ -48,6 +52,7 @@ function applySuggestion(target, original, corrected) {
 }
 
 async function handleInput(e) {
+    if (isApplyingSuggestion) return;
     const target = e.target;
     const isEditable = target.isContentEditable || 
                       target.tagName === "TEXTAREA" || 
@@ -93,8 +98,10 @@ async function handleInput(e) {
         );
     }, 2000);
 }
-
+let isInitialized = false;
 async function init() {
+    if (isInitialized) return;
+    isInitialized = true;
     console.log("Refyne content script initializing...");
     await new Promise(resolve => setTimeout(resolve, 100));
     try {
