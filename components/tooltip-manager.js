@@ -7,24 +7,23 @@ class TooltipManager {
     this.initializeStyles();
   }
 
-initializeTooltip() {
+  initializeTooltip() {
     this.tooltip = document.createElement("div");
     Object.assign(this.tooltip.style, {
       position: "fixed",
-      border: "2px solid #E0E7FF",
+      border: "1px solid #E0E7FF",
       padding: "0",
-      borderRadius: "12px",
+      borderRadius: "10px",
       boxShadow:
-        "0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.1)",
+        "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
       zIndex: "2147483647",
       display: "none",
-      fontSize: "14px",
-      maxWidth: "480px",
-      minWidth: "380px",
-      maxHeight: "70vh",
+      fontSize: "12px",
+      maxWidth: "380px",
+      minWidth: "320px",
       fontFamily:
         "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif",
-      lineHeight: "1.6",
+      lineHeight: "1.4",
       background: "#FFFFFF",
       overflow: "hidden",
     });
@@ -76,6 +75,63 @@ initializeTooltip() {
         from { opacity: 0; }
         to { opacity: 1; }
       }
+
+      /* New animations for tone loading */
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(200%); }
+      }
+
+      @keyframes toneSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes bounceIn {
+        0% {
+          opacity: 0;
+          transform: scale(0.3);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.05);
+        }
+        70% {
+          transform: scale(0.9);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+        20%, 40%, 60%, 80% { transform: translateX(4px); }
+      }
       
       #refyne-tooltip {
         animation: refyneSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -92,18 +148,37 @@ initializeTooltip() {
       }
       
       .refyne-tone-btn {
-        transition: all 0.2s ease !important;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .refyne-tone-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        transition: left 0.5s;
+      }
+
+      .refyne-tone-btn:hover::before {
+        left: 100%;
       }
 
       .refyne-tone-btn:hover {
         transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
 
       .refyne-tone-btn.active {
-        box-shadow: 0 2px 12px rgba(99, 102, 241, 0.3);
+        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+        transform: translateY(-1px);
       }
       
+      /* Rest of your existing styles remain the same */
       .refyne-listen-btn:hover {
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
@@ -131,14 +206,14 @@ initializeTooltip() {
         box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4) !important;
       }
       
-      .refyne-tab-button {
+     .refyne-tab-button {
         flex: 1;
-        padding: 14px 20px;
+        padding: 10px 12px !important;
         border: none;
         background: transparent;
         cursor: pointer;
         color: #6B7280;
-        font-size: 14px;
+        font-size: 12px !important;
         font-weight: 500;
         transition: all 0.2s ease;
         position: relative;
@@ -173,16 +248,18 @@ initializeTooltip() {
         transform: scaleX(1);
       }
       
-      .refyne-tab-content {
-        max-height: 50vh;
+       .refyne-tab-content {
+        animation: refyneFadeIn 0.15s ease-out;
+        pointer-events: auto !important;
+        max-height: 45vh !important;
         overflow-y: auto;
-        padding: 20px;
+        padding: 12px !important;
       }
       
-      .refyne-suggestions-content {
-        max-height: 40vh;
-        overflow-y: auto;
-        padding-right: 8px;
+       .refyne-suggestions-content {
+        max-height: none !important;
+        overflow-y: visible !important;
+        padding-right: 0 !important;
       }
       
       .refyne-suggestions-content::-webkit-scrollbar {
@@ -276,7 +353,7 @@ initializeTooltip() {
 
     const spaceBelow = viewportHeight - (targetRect.bottom - scrollY);
     const spaceAbove = targetRect.top - scrollY;
-    
+
     if (spaceBelow < tooltipHeight + 20 && spaceAbove > tooltipHeight + 20) {
       top = targetRect.top + scrollY - tooltipHeight - 10;
     }
@@ -297,8 +374,14 @@ initializeTooltip() {
     this.tooltip.style.display = "block";
     this.tooltip.style.visibility = "hidden";
     const tooltipRect = this.tooltip.getBoundingClientRect();
-    const left = Math.max(20, (window.innerWidth - tooltipRect.width) / 2 + window.scrollX);
-    const top = Math.max(20, (window.innerHeight - tooltipRect.height) / 2 + window.scrollY);
+    const left = Math.max(
+      20,
+      (window.innerWidth - tooltipRect.width) / 2 + window.scrollX
+    );
+    const top = Math.max(
+      20,
+      (window.innerHeight - tooltipRect.height) / 2 + window.scrollY
+    );
     this.tooltip.style.left = left + "px";
     this.tooltip.style.top = top + "px";
     this.tooltip.style.visibility = "visible";
@@ -307,46 +390,46 @@ initializeTooltip() {
   generateInsightsHTML(insights) {
     if (!insights)
       return `
-        <div style="text-align: center; padding: 60px 20px; color: #9CA3AF;">
-          <div style="margin-bottom: 16px;">${this.getSVGIcon("chart")}</div>
-          <div style="font-size: 16px; font-weight: 600; color: #6B7280; margin-bottom: 8px;">No insights available</div>
-          <div style="font-size: 13px; color: #9CA3AF;">Write more text to get detailed analysis</div>
+        <div style="text-align: center; padding: 40px 16px; color: #9CA3AF;">
+          <div style="margin-bottom: 12px;">${this.getSVGIcon("chart")}</div>
+          <div style="font-size: 14px; font-weight: 600; color: #6B7280; margin-bottom: 6px;">No insights available</div>
+          <div style="font-size: 12px; color: #9CA3AF;">Write more text to get detailed analysis</div>
         </div>
       `;
 
     return `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;">
-        <!-- Metrics Grid -->
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px;">
-          <div class="refyne-metric-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; color: white; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);">
-            <div style="font-size: 32px; font-weight: 700; margin-bottom: 4px;">${insights.wordCount}</div>
-            <div style="font-size: 11px; opacity: 0.9; letter-spacing: 0.5px; text-transform: uppercase;">Words</div>
+        <!-- Compact Metrics Grid -->
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px;">
+          <div class="refyne-metric-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 12px; border-radius: 8px; color: white; box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);">
+            <div style="font-size: 20px; font-weight: 700; margin-bottom: 2px;">${insights.wordCount}</div>
+            <div style="font-size: 9px; opacity: 0.9; letter-spacing: 0.5px; text-transform: uppercase;">Words</div>
           </div>
-          <div class="refyne-metric-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 10px; color: white; box-shadow: 0 4px 6px rgba(240, 147, 251, 0.3);">
-            <div style="font-size: 32px; font-weight: 700; margin-bottom: 4px;">${insights.sentenceCount}</div>
-            <div style="font-size: 11px; opacity: 0.9; letter-spacing: 0.5px; text-transform: uppercase;">Sentences</div>
+          <div class="refyne-metric-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 12px; border-radius: 8px; color: white; box-shadow: 0 2px 4px rgba(240, 147, 251, 0.3);">
+            <div style="font-size: 20px; font-weight: 700; margin-bottom: 2px;">${insights.sentenceCount}</div>
+            <div style="font-size: 9px; opacity: 0.9; letter-spacing: 0.5px; text-transform: uppercase;">Sentences</div>
           </div>
-          <div class="refyne-metric-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 10px; color: white; box-shadow: 0 4px 6px rgba(79, 172, 254, 0.3);">
-            <div style="font-size: 32px; font-weight: 700; margin-bottom: 4px;">${insights.readingTime}<span style="font-size: 18px;">min</span></div>
-            <div style="font-size: 11px; opacity: 0.9; letter-spacing: 0.5px; text-transform: uppercase;">Read Time</div>
+          <div class="refyne-metric-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 12px; border-radius: 8px; color: white; box-shadow: 0 2px 4px rgba(79, 172, 254, 0.3);">
+            <div style="font-size: 20px; font-weight: 700; margin-bottom: 2px;">${insights.readingTime}<span style="font-size: 14px;">min</span></div>
+            <div style="font-size: 9px; opacity: 0.9; letter-spacing: 0.5px; text-transform: uppercase;">Read Time</div>
           </div>
-          <div class="refyne-metric-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); padding: 20px; border-radius: 10px; color: white; box-shadow: 0 4px 6px rgba(67, 233, 123, 0.3);">
-            <div style="font-size: 32px; font-weight: 700; margin-bottom: 4px;">${insights.readability}<span style="font-size: 18px;">%</span></div>
-            <div style="font-size: 11px; opacity: 0.9; letter-spacing: 0.5px; text-transform: uppercase;">Readability</div>
+          <div class="refyne-metric-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); padding: 12px; border-radius: 8px; color: white; box-shadow: 0 2px 4px rgba(67, 233, 123, 0.3);">
+            <div style="font-size: 20px; font-weight: 700; margin-bottom: 2px;">${insights.readability}<span style="font-size: 14px;">%</span></div>
+            <div style="font-size: 9px; opacity: 0.9; letter-spacing: 0.5px; text-transform: uppercase;">Readability</div>
           </div>
         </div>
 
         ${insights.tone.length > 0 ? `
-          <div style="margin-bottom: 24px;">
-            <div style="display: flex; align-items: center; margin-bottom: 14px;">
-              <div style="background: linear-gradient(135deg, #667eea, #764ba2); width: 4px; height: 20px; border-radius: 2px; margin-right: 10px;"></div>
-              <div style="font-weight: 700; color: #1F2937; font-size: 13px; letter-spacing: 0.3px; text-transform: uppercase;">Writing Tone</div>
+          <div style="margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+              <div style="background: linear-gradient(135deg, #667eea, #764ba2); width: 3px; height: 16px; border-radius: 2px; margin-right: 8px;"></div>
+              <div style="font-weight: 700; color: #1F2937; font-size: 11px; letter-spacing: 0.3px; text-transform: uppercase;">Writing Tone</div>
             </div>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
               ${insights.tone.map(tone => `
-                <div class="refyne-tone-badge" style="background: ${this.textAnalyzer.getToneColor(tone.name)}; color: white; padding: 10px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                <div class="refyne-tone-badge" style="background: ${this.textAnalyzer.getToneColor(tone.name)}; color: white; padding: 6px 10px; border-radius: 16px; font-size: 10px; font-weight: 600; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);">
                   <span>${tone.name}</span>
-                  <span style="opacity: 0.85; font-size: 11px; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 10px;">${tone.score}%</span>
+                  <span style="opacity: 0.85; font-size: 9px; background: rgba(255,255,255,0.2); padding: 1px 4px; border-radius: 8px;">${tone.score}%</span>
                 </div>
               `).join("")}
             </div>
@@ -354,16 +437,16 @@ initializeTooltip() {
         ` : ""}
 
         ${insights.issues.length > 0 ? `
-          <div style="margin-bottom: 24px;">
-            <div style="display: flex; align-items: center; margin-bottom: 14px;">
-              <div style="background: linear-gradient(135deg, #f093fb, #f5576c); width: 4px; height: 20px; border-radius: 2px; margin-right: 10px;"></div>
-              <div style="font-weight: 700; color: #1F2937; font-size: 13px; letter-spacing: 0.3px; text-transform: uppercase;">Improvement Areas</div>
+          <div style="margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+              <div style="background: linear-gradient(135deg, #f093fb, #f5576c); width: 3px; height: 16px; border-radius: 2px; margin-right: 8px;"></div>
+              <div style="font-weight: 700; color: #1F2937; font-size: 11px; letter-spacing: 0.3px; text-transform: uppercase;">Improvement Areas</div>
             </div>
-            <div style="background: linear-gradient(135deg, #FFFBEB, #FEF3C7); border: 2px solid #FDE68A; border-radius: 10px; padding: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
+            <div style="background: linear-gradient(135deg, #FFFBEB, #FEF3C7); border: 1px solid #FDE68A; border-radius: 6px; padding: 10px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
               ${insights.issues.map((issue, index) => `
-                <div style="display: flex; align-items: start; margin-bottom: ${index === insights.issues.length - 1 ? "0" : "12px"};">
-                  <span style="color: #F59E0B; margin-right: 10px; margin-top: 2px;">${this.getSVGIcon("alertCircle")}</span>
-                  <span style="color: #92400E; font-size: 13px; line-height: 1.6; font-weight: 500;">${issue}</span>
+                <div style="display: flex; align-items: start; margin-bottom: ${index === insights.issues.length - 1 ? "0" : "6px"};">
+                  <span style="color: #F59E0B; margin-right: 6px; margin-top: 1px; width: 12px; height: 12px;">${this.getSVGIcon("alertCircle")}</span>
+                  <span style="color: #92400E; font-size: 11px; line-height: 1.4; font-weight: 500;">${issue}</span>
                 </div>
               `).join("")}
             </div>
@@ -371,32 +454,32 @@ initializeTooltip() {
         ` : ""}
 
         ${insights.suggestions.length > 0 ? `
-          <div style="margin-bottom: 16px;">
-            <div style="display: flex; align-items: center; margin-bottom: 14px;">
-              <div style="background: linear-gradient(135deg, #43e97b, #38f9d7); width: 4px; height: 20px; border-radius: 2px; margin-right: 10px;"></div>
-              <div style="font-weight: 700; color: #1F2937; font-size: 13px; letter-spacing: 0.3px; text-transform: uppercase;">Writing Tips</div>
+          <div style="margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+              <div style="background: linear-gradient(135deg, #43e97b, #38f9d7); width: 3px; height: 16px; border-radius: 2px; margin-right: 8px;"></div>
+              <div style="font-weight: 700; color: #1F2937; font-size: 11px; letter-spacing: 0.3px; text-transform: uppercase;">Writing Tips</div>
             </div>
-            <div style="background: linear-gradient(135deg, #ECFDF5, #D1FAE5); border: 2px solid #A7F3D0; border-radius: 10px; padding: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
+            <div style="background: linear-gradient(135deg, #ECFDF5, #D1FAE5); border: 1px solid #A7F3D0; border-radius: 6px; padding: 10px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);">
               ${insights.suggestions.map((tip, index) => `
-                <div style="display: flex; align-items: start; margin-bottom: ${index === insights.suggestions.length - 1 ? "0" : "12px"};">
-                  <span style="color: #10B981; margin-right: 10px; margin-top: 2px;">${this.getSVGIcon("lightbulb")}</span>
-                  <span style="color: #065F46; font-size: 13px; line-height: 1.6; font-weight: 500;">${tip}</span>
+                <div style="display: flex; align-items: start; margin-bottom: ${index === insights.suggestions.length - 1 ? "0" : "6px"};">
+                  <span style="color: #10B981; margin-right: 6px; margin-top: 1px; width: 12px; height: 12px;">${this.getSVGIcon("lightbulb")}</span>
+                  <span style="color: #065F46; font-size: 11px; line-height: 1.4; font-weight: 500;">${tip}</span>
                 </div>
               `).join("")}
             </div>
           </div>
         ` : ""}
 
-        <!-- Footer Stats -->
-        <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #F3F4F6; display: flex; justify-content: space-around; text-align: center;">
+        <!-- Compact Footer Stats -->
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #F3F4F6; display: flex; justify-content: space-around; text-align: center;">
           <div>
-            <div style="font-size: 20px; font-weight: 700; color: #6366F1;">${insights.avgSentenceLength}</div>
-            <div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px;">Avg Words/Sentence</div>
+            <div style="font-size: 16px; font-weight: 700; color: #6366F1;">${insights.avgSentenceLength}</div>
+            <div style="font-size: 9px; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px;">Avg Words/Sentence</div>
           </div>
-          <div style="width: 2px; background: #E5E7EB;"></div>
+          <div style="width: 1px; background: #E5E7EB;"></div>
           <div>
-            <div style="font-size: 20px; font-weight: 700; color: #8B5CF6;">${insights.paragraphCount}</div>
-            <div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px;">Paragraphs</div>
+            <div style="font-size: 16px; font-weight: 700; color: #8B5CF6;">${insights.paragraphCount}</div>
+            <div style="font-size: 9px; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px;">Paragraphs</div>
           </div>
         </div>
       </div>
@@ -428,21 +511,20 @@ initializeTooltip() {
       ? `<span style="font-size: 11px; color: #9CA3AF; font-weight: 500;">Offline Mode</span>`
       : `<span style="font-size: 11px; color: #9CA3AF; font-weight: 500;">Powered by AI</span>`;
 
-    // Get available tones
     const availableTones = window.aiEngine.getAvailableTones();
     const currentTone = window.aiEngine.getCurrentTone();
 
     const toneSelectorHtml = source !== "offline" ? `
-      <div style="margin-bottom: 16px;">
-        <div style="font-size: 11px; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 600;">Writing Style</div>
-        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+      <div style="margin-bottom: 12px;">
+        <div style="font-size: 11px; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600;">Writing Style</div>
+        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
           ${availableTones.map(tone => `
             <button class="refyne-tone-btn ${tone === currentTone ? 'active' : ''}" 
                     data-tone="${tone}"
-                    style="padding: 8px 12px; border: 2px solid ${tone === currentTone ? '#6366F1' : '#E5E7EB'}; 
+                    style="padding: 6px 10px; border: 2px solid ${tone === currentTone ? '#6366F1' : '#E5E7EB'}; 
                            background: ${tone === currentTone ? '#6366F1' : 'white'}; 
                            color: ${tone === currentTone ? 'white' : '#6B7280'}; 
-                           border-radius: 6px; font-size: 11px; font-weight: 600; 
+                           border-radius: 6px; font-size: 10px; font-weight: 600; 
                            cursor: pointer; transition: all 0.2s ease;">
               ${window.aiEngine.getToneDisplayName(tone)}
             </button>
@@ -451,144 +533,220 @@ initializeTooltip() {
       </div>
     ` : '';
 
-    const tooltipContent = `
-      <!-- Header with Close Button -->
-      <div style="background: linear-gradient(135deg, #F5F3FF, #EDE9FE); border-bottom: 2px solid #E0E7FF; padding: 4px 12px 4px 4px; display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; flex: 1;">
-          <button class="refyne-tab-button active" data-tab="suggestion">
-            <span style="margin-right: 6px; display: inline-flex; align-items: center;">${this.getSVGIcon('sparkle')}</span> Suggestion
-          </button>
-          <button class="refyne-tab-button" data-tab="insights">
-            <span style="margin-right: 6px; display: inline-flex; align-items: center;">${this.getSVGIcon('chart')}</span> Insights
-          </button>
-        </div>
-        <button class="refyne-close-btn" style="background: none; border: none; cursor: pointer; padding: 8px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #6B7280;">
-          ${this.getSVGIcon('close')}
-        </button>
-      </div>
-      
-      <!-- Suggestion Tab -->
-      <div id="suggestion-tab" class="refyne-tab-content">
-        <div class="refyne-suggestions-content">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-            <div style="background: ${titleBg}; padding: 12px 16px; border-radius: 8px; border: 2px solid ${source === "offline" ? "#FDE68A" : "#A7F3D0"}; display: flex; align-items: center; gap: 8px; flex: 1;">
-              <span style="display: inline-flex; color: ${titleColor};">${titleIcon}</span>
-              <div style="font-weight: 700; color: ${titleColor}; font-size: 15px;">${titleText}</div>
-            </div>
-            ${ttsEnabled ? `
-            <button class="refyne-listen-btn" style="margin-left: 12px; padding: 10px 12px; background: linear-gradient(135deg, #6366F1, #8B5CF6); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3); min-width: auto;">
-              ${this.getSVGIcon('speaker')}
+        const tooltipContent = `
+        <!-- Header with Close Button -->
+        <div style="background: linear-gradient(135deg, #F5F3FF, #EDE9FE); border-bottom: 2px solid #E0E7FF; padding: 2px 8px 2px 2px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; flex: 1;">
+            <button class="refyne-tab-button active" data-tab="suggestion">
+              <span style="margin-right: 4px; display: inline-flex; align-items: center;">${this.getSVGIcon('sparkle')}</span> Suggestion
             </button>
-            ` : ''}
+            <button class="refyne-tab-button" data-tab="insights">
+              <span style="margin-right: 4px; display: inline-flex; align-items: center;">${this.getSVGIcon('chart')}</span> Insights
+            </button>
           </div>
-          
-          ${toneSelectorHtml}
-          
-          <div style="background: #F9FAFB; border: 2px solid #E5E7EB; border-radius: 8px; padding: 14px; margin-bottom: 12px;">
-            <div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600;">Original</div>
-            <div style="color: #6B7280; text-decoration: line-through; font-size: 14px; line-height: 1.6; word-wrap: break-word;">${suggestion.original}</div>
-          </div>
-          
-          <div style="background: linear-gradient(135deg, #ECFDF5, #D1FAE5); border: 2px solid #10B981; border-radius: 8px; padding: 14px; margin-bottom: 12px;">
-            <div style="font-size: 11px; color: #059669; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600;">Improved (${window.aiEngine.getToneDisplayName(suggestion.tone || 'professional')})</div>
-            <div style="color: #065F46; font-weight: 600; font-size: 14px; line-height: 1.6; word-wrap: break-word;">${suggestion.corrected}</div>
-          </div>
-          
-          <div style="text-align: center; padding: 12px; background: linear-gradient(135deg, #EEF2FF, #E0E7FF); border-radius: 8px; border: 2px dashed #C7D2FE; margin-bottom: 8px;">
-            <div style="font-size: 13px; color: #4F46E5; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">
-              ${this.getSVGIcon('info')} Click anywhere to apply suggestion
+          <button class="refyne-close-btn" style="background: none; border: none; cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #6B7280;">
+            ${this.getSVGIcon('close')}
+          </button>
+        </div>
+        
+        <!-- Suggestion Tab -->
+        <div id="suggestion-tab" class="refyne-tab-content">
+          <div class="refyne-suggestions-content" style="max-height: none; overflow-y: visible;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+              <div style="background: ${titleBg}; padding: 8px 12px; border-radius: 6px; border: 1px solid ${source === "offline" ? "#FDE68A" : "#A7F3D0"}; display: flex; align-items: center; gap: 6px; flex: 1;">
+                <span style="display: inline-flex; color: ${titleColor}; width: 14px; height: 14px;">${titleIcon}</span>
+                <div style="font-weight: 700; color: ${titleColor}; font-size: 12px;">${titleText}</div>
+              </div>
+              ${ttsEnabled ? `
+              <button class="refyne-listen-btn" style="margin-left: 8px; padding: 6px 8px; background: linear-gradient(135deg, #6366F1, #8B5CF6); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 600; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 4px rgba(99, 102, 241, 0.3); min-width: auto;">
+                ${this.getSVGIcon('speaker')}
+              </button>
+              ` : ''}
+            </div>
+            
+            ${toneSelectorHtml}
+            
+            <div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 6px; padding: 10px; margin-bottom: 8px;">
+              <div style="font-size: 10px; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600;">Original</div>
+              <div style="color: #6B7280; text-decoration: line-through; font-size: 12px; line-height: 1.4; word-wrap: break-word; max-height: 60px; overflow: hidden;">${suggestion.original}</div>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #ECFDF5, #D1FAE5); border: 1px solid #10B981; border-radius: 6px; padding: 10px; margin-bottom: 8px;">
+              <div style="font-size: 10px; color: #059669; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600;">Improved (${window.aiEngine.getToneDisplayName(suggestion.tone || 'professional')})</div>
+              <div style="color: #065F46; font-weight: 600; font-size: 12px; line-height: 1.4; word-wrap: break-word; max-height: 80px; overflow: hidden;">${suggestion.corrected}</div>
+            </div>
+            
+            <div style="text-align: center; padding: 8px; background: linear-gradient(135deg, #EEF2FF, #E0E7FF); border-radius: 6px; border: 1px dashed #C7D2FE; margin-bottom: 4px;">
+              <div style="font-size: 11px; color: #4F46E5; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                ${this.getSVGIcon('info')} Click to apply
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      
-      <!-- Insights Tab -->
-      <div id="insights-tab" class="refyne-tab-content" style="display: none;">
-        ${insightsHtml}
-      </div>
-      
-      <!-- Footer -->
-      <div style="padding: 12px 20px; border-top: 2px solid #F3F4F6; background: #FAFAFA; display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <div style="width: 8px; height: 8px; border-radius: 50%; background: ${source === "offline" ? "#F59E0B" : "#10B981"};"></div>
-          ${sourceIndicator}
+        
+        <!-- Insights Tab -->
+        <div id="insights-tab" class="refyne-tab-content" style="display: none;">
+          ${insightsHtml}
         </div>
-        <div style="font-size: 10px; color: #D1D5DB; font-weight: 600;">REFYNE</div>
-      </div>
-    `;
-    
-    this.tooltip.innerHTML = tooltipContent;
-    this.positionTooltip(targetElement);
-    
-    this.setupTabListeners(targetElement);
-    this.setupListenButton(suggestion.corrected);
-    this.setupCloseButton();
-    
-    if (window.aiEngine && source !== "offline") {
-      this.setupToneButtons(targetElement, suggestion.original, applyCallback);
+        
+        <!-- Footer -->
+        <div style="padding: 8px 12px; border-top: 1px solid #F3F4F6; background: #FAFAFA; display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: ${source === "offline" ? "#F59E0B" : "#10B981"};"></div>
+            ${sourceIndicator}
+          </div>
+          <div style="font-size: 9px; color: #D1D5DB; font-weight: 600;">REFYNE</div>
+        </div>
+      `;
+      
+      this.tooltip.innerHTML = tooltipContent;
+      
+      this.tooltip.style.minWidth = "320px";
+      this.tooltip.style.maxWidth = "380px";
+      this.tooltip.style.maxHeight = "none";
+      
+      this.positionTooltip(targetElement);
+      
+      this.setupTabListeners(targetElement);
+      this.setupListenButton(suggestion.corrected);
+      this.setupCloseButton();
+      
+      if (window.aiEngine && source !== "offline") {
+        this.setupToneButtons(targetElement, suggestion.original, applyCallback);
+      }
+      
+      this.setupClickHandler(applyCallback);
+      this.setupOutsideClickHandler();
     }
-    this.setupClickHandler(applyCallback);
-    this.setupOutsideClickHandler();
-  }
 
   setupToneButtons(targetElement, originalText, applyCallback) {
-    const toneButtons = this.tooltip.querySelectorAll('.refyne-tone-btn');
-    
-    toneButtons.forEach(button => {
-      button.addEventListener('click', async (e) => {
+    const toneButtons = this.tooltip.querySelectorAll(".refyne-tone-btn");
+
+    toneButtons.forEach((button) => {
+      button.addEventListener("click", async (e) => {
         e.stopPropagation();
-        const improvedSection = this.tooltip.querySelector('#suggestion-tab .refyne-suggestions-content > div:nth-last-child(2)');
+        const improvedSection = this.tooltip.querySelector(
+          "#suggestion-tab .refyne-suggestions-content > div:nth-last-child(2)"
+        );
         if (!improvedSection) return;
+
         
         const originalImprovedContent = improvedSection.innerHTML;
-        improvedSection.innerHTML = `
-          <div style="text-align: center; padding: 20px; color: #6B7280;">
-            <div style="margin-bottom: 8px;">🔄</div>
-            <div>Generating ${window.aiEngine.getToneDisplayName(button.dataset.tone)} version...</div>
-          </div>
-        `;
+        const originalTextContent =
+          improvedSection.querySelector("div:last-child")?.textContent || "";
+
+       
+        improvedSection.innerHTML = this.createToneLoadingState(
+          button.dataset.tone
+        );
 
         try {
-          const newSuggestion = await window.aiEngine.getSuggestions(originalText, button.dataset.tone);
-          
-          if (newSuggestion) {
-            improvedSection.innerHTML = `
-              <div style="background: linear-gradient(135deg, #ECFDF5, #D1FAE5); border: 2px solid #10B981; border-radius: 8px; padding: 14px; margin-bottom: 12px;">
-                <div style="font-size: 11px; color: #059669; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600;">Improved (${window.aiEngine.getToneDisplayName(button.dataset.tone)})</div>
-                <div style="color: #065F46; font-weight: 600; font-size: 14px; line-height: 1.6; word-wrap: break-word;">${newSuggestion.corrected}</div>
-              </div>
-            `;
-            toneButtons.forEach(btn => {
-              btn.classList.remove('active');
-              btn.style.background = 'white';
-              btn.style.color = '#6B7280';
-              btn.style.borderColor = '#E5E7EB';
-            });
-            
-            button.classList.add('active');
-            button.style.background = '#6366F1';
-            button.style.color = 'white';
-            button.style.borderColor = '#6366F1';
+          const newSuggestion = await window.aiEngine.getSuggestions(
+            originalText,
+            button.dataset.tone
+          );
+
+          if (newSuggestion && newSuggestion.corrected) {
+            this.smoothTransitionToNewTone(
+              improvedSection,
+              newSuggestion,
+              button.dataset.tone
+            );
+            this.updateToneUIState(toneButtons, button);
             window.aiEngine.setCurrentTone(button.dataset.tone);
             this.setupClickHandler(() => {
               applyCallback(newSuggestion);
             });
             this.setupListenButton(newSuggestion.corrected);
           } else {
-            improvedSection.innerHTML = originalImprovedContent;
+            this.showToneErrorState(improvedSection, originalImprovedContent);
           }
         } catch (error) {
-          console.error('Error generating tone suggestion:', error);
-          improvedSection.innerHTML = originalImprovedContent;
+          console.error("Error generating tone suggestion:", error);
+          this.showToneErrorState(improvedSection, originalImprovedContent);
         }
       });
     });
   }
+  createToneLoadingState(tone) {
+    const toneName = window.aiEngine.getToneDisplayName(tone);
+    return `
+      <div style="background: linear-gradient(135deg, #F0F9FF, #E0F2FE); border: 2px solid #BAE6FD; border-radius: 8px; padding: 16px; position: relative; overflow: hidden;">
+        <!-- Animated background -->
+        <div style="position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shimmer 1.5s infinite;"></div>
+        
+        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
+          <!-- Animated spinner -->
+          <div style="width: 20px; height: 20px; border: 2px solid #E0F2FE; border-top: 2px solid #0EA5E9; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+          <div style="font-size: 11px; color: #0369A1; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Generating ${toneName} Version</div>
+        </div>
+        
+        <!-- Loading text skeleton -->
+        <div style="background: linear-gradient(90deg, #F0F9FF, #E0F2FE, #F0F9FF); background-size: 200% 100%; animation: shimmer 2s infinite; height: 12px; border-radius: 6px; margin-bottom: 6px;"></div>
+        <div style="background: linear-gradient(90deg, #F0F9FF, #E0F2FE, #F0F9FF); background-size: 200% 100%; animation: shimmer 2s infinite 0.2s; height: 12px; border-radius: 6px; margin-bottom: 6px; width: 90%;"></div>
+        <div style="background: linear-gradient(90deg, #F0F9FF, #E0F2FE, #F0F9FF); background-size: 200% 100%; animation: shimmer 2s infinite 0.4s; height: 12px; border-radius: 6px; width: 80%;"></div>
+      </div>
+    `;
+  }
+
+  smoothTransitionToNewTone(container, suggestion, tone) {
+    container.style.opacity = "0";
+    container.style.transition = "opacity 0.2s ease";
+
+    setTimeout(() => {
+      container.innerHTML = `
+        <div style="background: linear-gradient(135deg, #ECFDF5, #D1FAE5); border: 2px solid #10B981; border-radius: 8px; padding: 14px; margin-bottom: 12px; animation: toneSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+          <div style="font-size: 11px; color: #059669; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+            <span style="display: inline-flex; animation: bounceIn 0.6s ease;">✨</span>
+            Improved (${window.aiEngine.getToneDisplayName(tone)})
+          </div>
+          <div style="color: #065F46; font-weight: 600; font-size: 14px; line-height: 1.6; word-wrap: break-word; animation: fadeInUp 0.4s ease 0.1s both;">${
+            suggestion.corrected
+          }</div>
+        </div>
+      `;
+
+      container.style.opacity = "1";
+    }, 200);
+  }
+
+  updateToneUIState(toneButtons, activeButton) {
+    toneButtons.forEach((btn) => {
+      btn.style.transition = "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
+      btn.classList.remove("active");
+      btn.style.background = "white";
+      btn.style.color = "#6B7280";
+      btn.style.borderColor = "#E5E7EB";
+      btn.style.transform = "scale(1)";
+    });
+
+    activeButton.classList.add("active");
+    activeButton.style.background = "#6366F1";
+    activeButton.style.color = "white";
+    activeButton.style.borderColor = "#6366F1";
+    activeButton.style.transform = "scale(1.05)";
+    setTimeout(() => {
+      activeButton.style.transform = "scale(1)";
+    }, 300);
+  }
+
+  showToneErrorState(container, fallbackContent) {
+    container.innerHTML = `
+      <div style="background: linear-gradient(135deg, #FEF2F2, #FECACA); border: 2px solid #FCA5A5; border-radius: 8px; padding: 16px; text-align: center; animation: shake 0.5s ease;">
+        <div style="color: #DC2626; font-size: 24px; margin-bottom: 8px;">⚠️</div>
+        <div style="font-size: 12px; color: #991B1B; font-weight: 600; margin-bottom: 8px;">Failed to generate suggestion</div>
+        <div style="font-size: 11px; color: #EF4444;">Please try again</div>
+      </div>
+    `;
+    setTimeout(() => {
+      container.innerHTML = fallbackContent;
+    }, 2000);
+  }
 
   setupCloseButton() {
-    const closeBtn = this.tooltip.querySelector('.refyne-close-btn');
+    const closeBtn = this.tooltip.querySelector(".refyne-close-btn");
     if (closeBtn) {
-      closeBtn.addEventListener('click', (e) => {
+      closeBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         this.hide();
       });
@@ -597,13 +755,16 @@ initializeTooltip() {
 
   setupOutsideClickHandler() {
     const outsideClickListener = (e) => {
-      if (!this.tooltip.contains(e.target) && this.tooltip.style.display !== 'none') {
+      if (
+        !this.tooltip.contains(e.target) &&
+        this.tooltip.style.display !== "none"
+      ) {
         this.hide();
-        document.removeEventListener('click', outsideClickListener);
+        document.removeEventListener("click", outsideClickListener);
       }
     };
     setTimeout(() => {
-      document.addEventListener('click', outsideClickListener);
+      document.addEventListener("click", outsideClickListener);
     }, 100);
   }
 
@@ -618,10 +779,12 @@ initializeTooltip() {
         tabButtons.forEach((btn) => btn.classList.remove("active"));
         button.classList.add("active");
 
-        this.tooltip.querySelectorAll(".refyne-tab-content").forEach((content) => {
-          content.style.display = "none";
-        });
-        
+        this.tooltip
+          .querySelectorAll(".refyne-tab-content")
+          .forEach((content) => {
+            content.style.display = "none";
+          });
+
         const activeTab = this.tooltip.querySelector(`#${tabName}-tab`);
         activeTab.style.display = "block";
 
@@ -639,7 +802,7 @@ initializeTooltip() {
     if (listenBtn) {
       const newListenBtn = listenBtn.cloneNode(true);
       listenBtn.parentNode.replaceChild(newListenBtn, listenBtn);
-      
+
       newListenBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         this.speakText(text);
@@ -649,8 +812,8 @@ initializeTooltip() {
 
   setupClickHandler(callback) {
     this.tooltip.onclick = null;
-    
-    this.tooltip.addEventListener('click', (e) => {
+
+    this.tooltip.addEventListener("click", (e) => {
       if (
         !e.target.closest(".refyne-listen-btn") &&
         !e.target.classList.contains("refyne-tab-button") &&
