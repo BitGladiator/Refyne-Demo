@@ -1,5 +1,4 @@
 console.log("Refyne content script loaded");
-
 let debounceTimeout = null;
 let activeTarget = null;
 let activeSuggestion = null;
@@ -219,6 +218,7 @@ async function init() {
         textAnalyzer = new window.TextAnalyzer();
         aiEngine = new window.AIEngine();
         tooltipManager = new window.TooltipManager();
+        window.aiEngine = aiEngine;
     } catch (error) {
         console.error("Failed to initialize components:", error);
         return;
