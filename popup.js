@@ -46,16 +46,25 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   customExpansions.addEventListener("change", function() {
     chrome.storage.sync.set({ 
-        customExpansions: this.value 
+      customExpansions: this.value 
+    }, () => {
+      console.log('Saved custom expansions:', this.value);
     });
   });
   customExpansions.addEventListener("blur", function() {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0] && tabs[0].id) {
-        chrome.tabs.sendMessage(tabs[0].id, {
-          action: "reloadExpanderSettings"
-        }).catch(err => console.log("Failed to reload settings:", err));
-      }
+    chrome.storage.sync.set({ 
+      customExpansions: this.value 
+    }, () => {
+      // Reload in all tabs
+      chrome.tabs.query({}, (tabs) => {
+        tabs.forEach(tab => {
+          if (tab.url && tab.url.startsWith('http')) {
+            chrome.tabs.sendMessage(tab.id, {
+              action: "reloadExpanderSettings"
+            }).catch(err => console.log("Tab reload failed:", err));
+          }
+        });
+      });
     });
   });
   

@@ -58,31 +58,31 @@ class AIEngine {
     this.expanderEnabled = false;
     this.customExpansions = new Map();
     this.defaultExpansions = new Map([
-      ['thanks', 'thanks a lot'],
-      ['thx', 'thanks'],
-      ['ty', 'thank you'],
-      ['np', 'no problem'],
-      ['brb', 'be right back'],
-      ['omw', 'on my way'],
-      ['tbh', 'to be honest'],
-      ['imo', 'in my opinion'],
-      ['imho', 'in my humble opinion'],
-      ['fyi', 'for your information'],
-      ['asap', 'as soon as possible'],
-      ['btw', 'by the way'],
-      ['lol', 'laughing out loud'],
-      ['idk', "I don't know"],
-      ['afaik', 'as far as I know'],
-      ['irl', 'in real life'],
-      ['pls', 'please'],
-      ['u', 'you'],
-      ['r', 'are'],
-      ['yr', 'your'],
-      ['msg', 'message'],
-      ['info', 'information'],
-      ['doc', 'document'],
-      ['approx', 'approximately'],
-      ['appt', 'appointment']
+      ["thanks", "thanks a lot"],
+      ["thx", "thanks"],
+      ["ty", "thank you"],
+      ["np", "no problem"],
+      ["brb", "be right back"],
+      ["omw", "on my way"],
+      ["tbh", "to be honest"],
+      ["imo", "in my opinion"],
+      ["imho", "in my humble opinion"],
+      ["fyi", "for your information"],
+      ["asap", "as soon as possible"],
+      ["btw", "by the way"],
+      ["lol", "laughing out loud"],
+      ["idk", "I don't know"],
+      ["afaik", "as far as I know"],
+      ["irl", "in real life"],
+      ["pls", "please"],
+      ["u", "you"],
+      ["r", "are"],
+      ["yr", "your"],
+      ["msg", "message"],
+      ["info", "information"],
+      ["doc", "document"],
+      ["approx", "approximately"],
+      ["appt", "appointment"],
     ]);
 
     this.initializeOfflineChecker();
@@ -96,9 +96,12 @@ class AIEngine {
   async loadExpanderPreferences() {
     try {
       const result = await new Promise((resolve) => {
-        chrome.storage.sync.get(["enableExpander", "customExpansions"], resolve);
+        chrome.storage.sync.get(
+          ["enableExpander", "customExpansions"],
+          resolve
+        );
       });
-      
+
       this.expanderEnabled = result.enableExpander || false;
       this.loadCustomExpansions(result.customExpansions);
     } catch (error) {
@@ -109,70 +112,89 @@ class AIEngine {
 
   loadCustomExpansions(customExpansionsText) {
     this.customExpansions.clear();
-    
+
     if (!customExpansionsText) return;
-    
-    const lines = customExpansionsText.split('\n');
-    lines.forEach(line => {
+
+    const lines = customExpansionsText.split("\n");
+    lines.forEach((line) => {
       const trimmedLine = line.trim();
-      if (trimmedLine && trimmedLine.includes('=')) {
-        const parts = trimmedLine.split('=');
+      if (trimmedLine && trimmedLine.includes("=")) {
+        const parts = trimmedLine.split("=");
         if (parts.length >= 2) {
           const shortcut = parts[0].trim().toLowerCase();
-          const expansion = parts.slice(1).join('=').trim(); // Handle = in expansion text
+          const expansion = parts.slice(1).join("=").trim(); // Handle = in expansion text
           if (shortcut && expansion) {
             this.customExpansions.set(shortcut, expansion);
           }
         }
       }
     });
-    
-    console.log('Loaded custom expansions:', Array.from(this.customExpansions.entries()));
+
+    console.log(
+      "Loaded custom expansions:",
+      Array.from(this.customExpansions.entries())
+    );
   }
   expandText(text) {
-    if (!text || !this.expanderEnabled) return null;
+    if (!text || !this.expanderEnabled) {
+      console.log('Expander disabled or no text');
+      return null;
+    }
   
-  const words = text.trim().split(/\s+/);
-  if (words.length === 0) return null;
-  
-  const lastWord = words[words.length - 1].toLowerCase();
-  
-  console.log('Checking expansion for:', lastWord);
-  console.log('Custom expansions:', Array.from(this.customExpansions.keys()));
-  
-  let expansion = this.customExpansions.get(lastWord) || 
-                 this.defaultExpansions.get(lastWord);
+    // Don't trim the full text, just split it
+    const words = text.split(/\s+/);
+    if (words.length === 0) return null;
+    
+    // Get the last word and clean it
+    let lastWord = words[words.length - 1].toLowerCase().trim();
+    
+    // Remove trailing punctuation for matching
+    const cleanWord = lastWord.replace(/[.,!?;:]$/, '');
+    
+    console.log('Checking expansion for:', cleanWord);
+    console.log('Custom expansions:', Array.from(this.customExpansions.keys()));
+    console.log('Default expansions:', Array.from(this.defaultExpansions.keys()));
+    
+    let expansion = this.customExpansions.get(cleanWord) || 
+                   this.defaultExpansions.get(cleanWord);
     
     if (expansion) {
+      // Replace the last word with expansion
       words[words.length - 1] = expansion;
       const expandedText = words.join(' ');
+      
+      console.log('✓ Expansion found:', cleanWord, '→', expansion);
       
       return {
         original: text,
         expanded: expandedText,
-        shortcut: lastWord,
+        shortcut: cleanWord,
         expansion: expansion,
         source: "expander"
       };
     }
     
+    console.log('✗ No expansion found for:', cleanWord);
     return null;
   }
   getAllExpansions() {
-    const allExpansions = new Map([...this.defaultExpansions, ...this.customExpansions]);
+    const allExpansions = new Map([
+      ...this.defaultExpansions,
+      ...this.customExpansions,
+    ]);
     return Array.from(allExpansions.entries()).map(([shortcut, expansion]) => ({
       shortcut,
-      expansion
+      expansion,
     }));
   }
   async setExpanderSettings(enabled, customExpansionsText) {
     this.expanderEnabled = enabled;
     this.loadCustomExpansions(customExpansionsText);
-    
+
     try {
       await chrome.storage.sync.set({
         enableExpander: enabled,
-        customExpansions: customExpansionsText
+        customExpansions: customExpansionsText,
       });
     } catch (error) {
       console.log("Could not save expander settings:", error);
@@ -630,7 +652,7 @@ class AIEngine {
       const aiSuggestion = await this.getAISuggestions(text, selectedTone);
       if (aiSuggestion) return aiSuggestion;
     }
-    
+
     const offlineSuggestion = this.getOfflineSuggestions(text, selectedTone);
     return offlineSuggestion;
   }

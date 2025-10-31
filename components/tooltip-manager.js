@@ -714,19 +714,17 @@ class TooltipManager {
     this.setupCloseButton();
 
     if (window.aiEngine && source !== "offline") {
-      this.setupToneButtons(targetElement, suggestion.original, (updatedSuggestion) => {
-        activeSuggestion = updatedSuggestion; 
-        applyCallback(updatedSuggestion);
-      });
+      this.setupToneButtons(targetElement, suggestion, applyCallback);  // Pass full suggestion object
     }
-
-    this.setupClickHandler(applyCallback);
+    
+    this.setupClickHandler(() => applyCallback(suggestion));  // Pass suggestion here too
     this.setupOutsideClickHandler();
   }
 
-  setupToneButtons(targetElement, originalText, applyCallback) {
+  setupToneButtons(targetElement, currentSuggestion, applyCallback) {
     const toneButtons = this.tooltip.querySelectorAll(".refyne-tone-btn");
-
+    let latestSuggestion = currentSuggestion;  // Store latest suggestion locally
+  
     toneButtons.forEach((button) => {
       button.addEventListener("click", async (e) => {
         e.stopPropagation();
@@ -734,22 +732,22 @@ class TooltipManager {
           "#suggestion-tab .refyne-suggestions-content > div:nth-last-child(2)"
         );
         if (!improvedSection) return;
-
+  
         const originalImprovedContent = improvedSection.innerHTML;
-        const originalTextContent =
-          improvedSection.querySelector("div:last-child")?.textContent || "";
-
+  
         improvedSection.innerHTML = this.createToneLoadingState(
           button.dataset.tone
         );
-
+  
         try {
           const newSuggestion = await window.aiEngine.getSuggestions(
-            originalText,
+            currentSuggestion.original,  // Use ORIGINAL text from first suggestion
             button.dataset.tone
           );
-
+  
           if (newSuggestion && newSuggestion.corrected) {
+            latestSuggestion = newSuggestion;  // Update local variable
+            
             this.smoothTransitionToNewTone(
               improvedSection,
               newSuggestion,
@@ -757,9 +755,12 @@ class TooltipManager {
             );
             this.updateToneUIState(toneButtons, button);
             window.aiEngine.setCurrentTone(button.dataset.tone);
+            
+            // UPDATE THE CLICK HANDLER with new suggestion
             this.setupClickHandler(() => {
-              applyCallback(newSuggestion); 
+              applyCallback(latestSuggestion);  // Use latest suggestion
             });
+            
             this.setupListenButton(newSuggestion.corrected);
           } else {
             this.showToneErrorState(improvedSection, originalImprovedContent);
@@ -914,8 +915,12 @@ class TooltipManager {
   }
 
   setupClickHandler(callback) {
-    this.tooltip.onclick = null;
-
+    // Remove old listener
+    const oldTooltip = this.tooltip;
+    const newTooltip = oldTooltip.cloneNode(true);
+    oldTooltip.parentNode.replaceChild(newTooltip, oldTooltip);
+    this.tooltip = newTooltip;
+  
     this.tooltip.addEventListener("click", (e) => {
       if (
         !e.target.closest(".refyne-listen-btn") &&
@@ -929,6 +934,10 @@ class TooltipManager {
         this.hide();
       }
     });
+    
+    // Re-setup other buttons after clone
+    this.setupCloseButton();
+    this.setupTabListeners(null);
   }
 
   async speakText(text) {
