@@ -55,7 +55,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     chrome.storage.sync.set({ 
       customExpansions: this.value 
     }, () => {
-      // Reload in all tabs
       chrome.tabs.query({}, (tabs) => {
         tabs.forEach(tab => {
           if (tab.url && tab.url.startsWith('http')) {

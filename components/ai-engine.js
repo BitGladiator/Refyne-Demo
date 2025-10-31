@@ -53,8 +53,6 @@ class AIEngine {
         description: "Suitable for sensitive topics and emotional support",
       },
     };
-
-    // Text Expander properties
     this.expanderEnabled = false;
     this.customExpansions = new Map();
     this.defaultExpansions = new Map([
@@ -140,15 +138,9 @@ class AIEngine {
       console.log('Expander disabled or no text');
       return null;
     }
-  
-    // Don't trim the full text, just split it
     const words = text.split(/\s+/);
     if (words.length === 0) return null;
-    
-    // Get the last word and clean it
     let lastWord = words[words.length - 1].toLowerCase().trim();
-    
-    // Remove trailing punctuation for matching
     const cleanWord = lastWord.replace(/[.,!?;:]$/, '');
     
     console.log('Checking expansion for:', cleanWord);
@@ -159,7 +151,6 @@ class AIEngine {
                    this.defaultExpansions.get(cleanWord);
     
     if (expansion) {
-      // Replace the last word with expansion
       words[words.length - 1] = expansion;
       const expandedText = words.join(' ');
       

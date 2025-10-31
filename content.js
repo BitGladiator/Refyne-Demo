@@ -92,9 +92,9 @@ async function handleInput(e) {
             target,
             suggestion,
             insights,
-            () => {
-                applySuggestion(target, suggestion.original, 
-                    suggestion.source === "expander" ? suggestion.expanded : suggestion.corrected);
+            (suggestionToApply) => {
+                applySuggestion(target, suggestionToApply.original, 
+                    suggestionToApply.source === "expander" ? suggestionToApply.expanded : suggestionToApply.corrected);
                 activeTarget = null;
                 activeSuggestion = null;
             }
