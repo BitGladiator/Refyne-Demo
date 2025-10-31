@@ -373,6 +373,19 @@
             width: 0%;
             transition: width 0.3s ease;
         }
+
+        .expander-examples {
+            background: var(--background);
+            border-radius: 6px;
+            padding: 8px;
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .expander-examples div {
+            margin-bottom: 2px;
+        }
     </style>
 </head>
 <body>
@@ -471,6 +484,45 @@
                     <input type="checkbox" id="toggleTTS">
                     <span class="slider"></span>
                 </label>
+            </div>
+        </div>
+
+        <!-- Text Expander Card -->
+        <div class="card">
+            <div class="toggle-section">
+                <div style="margin-bottom: 12px; font-size: 13px; font-weight: 600; color: var(--text-primary);">
+                    <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 8px;">
+                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                    </svg>
+                    Text Expander
+                </div>
+                
+                <div style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500;">
+                        Custom Expansions (one per line):
+                    </label>
+                    <textarea id="customExpansions" placeholder="thanks=thanks a lot&#10;brb=be right back&#10;omw=on my way" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; background: white; height: 80px; resize: vertical; font-family: monospace;"></textarea>
+                    <div style="font-size: 11px; color: var(--text-light); margin-top: 4px;">
+                        Format: shortcut=expanded text
+                    </div>
+                </div>
+
+                <div class="expander-examples">
+                    <div><strong>Built-in examples:</strong></div>
+                    <div>thx → thanks</div>
+                    <div>ty → thank you</div>
+                    <div>np → no problem</div>
+                    <div>brb → be right back</div>
+                    <div>omw → on my way</div>
+                </div>
+                
+                <div class="toggle">
+                    <span>Enable Text Expander</span>
+                    <label class="switch">
+                        <input type="checkbox" id="toggleExpander">
+                        <span class="slider"></span>
+                    </label>
+                </div>
             </div>
         </div>
         

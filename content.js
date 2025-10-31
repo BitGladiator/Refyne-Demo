@@ -36,7 +36,7 @@ function applySuggestion(target, original, corrected) {
             action: 'correctionApplied', 
             original, 
             corrected,
-            source: aiEngine.isOfflineMode() ? 'offline' : 'ai'
+            source: activeSuggestion?.source || (aiEngine.isOfflineMode() ? 'offline' : 'ai')
         }).catch(err => console.log('Background message failed:', err));
         
         tooltipManager.showStatus("Suggestion applied!", "success");
@@ -66,7 +66,7 @@ async function handleInput(e) {
     
     debounceTimeout = setTimeout(async () => {
         const text = getTextFromElement(target);
-        if (!text || text.trim().length < 3) return;
+        if (!text || text.trim().length < 2) return;
 
         try {
             const response = await new Promise(resolve => {
@@ -85,19 +85,21 @@ async function handleInput(e) {
         activeTarget = target;
         activeSuggestion = suggestion;
 
-        const insights = textAnalyzer.analyzeText(text);
+        // Don't show insights for text expansions
+        const insights = suggestion.source === "expander" ? null : textAnalyzer.analyzeText(text);
         
         tooltipManager.showWithInsights(
             target,
             suggestion,
             insights,
             () => {
-                applySuggestion(target, suggestion.original, suggestion.corrected);
+                applySuggestion(target, suggestion.original, 
+                    suggestion.source === "expander" ? suggestion.expanded : suggestion.corrected);
                 activeTarget = null;
                 activeSuggestion = null;
             }
         );
-    }, 2000);
+    }, 1500); // Reduced debounce for better responsiveness
 }
 
 function extractPageContent() {
@@ -239,6 +241,7 @@ async function init() {
     console.log("Refyne initialized successfully!");
     console.log("AI Mode:", aiEngine.isAIAvailable() ? "Active" : "Unavailable");
     console.log("Offline Mode:", aiEngine.isOfflineMode() ? "Active" : "Inactive");
+    console.log("Text Expander:", aiEngine.isExpanderEnabled() ? "Enabled" : "Disabled");
     
     function hideTooltipOnClick(e) {
         if (!tooltipManager.contains(e.target)) {

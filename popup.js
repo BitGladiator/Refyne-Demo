@@ -13,6 +13,8 @@ document.addEventListener("DOMContentLoaded", async function () {
   const closeSummaryBtn = document.getElementById("closeSummary");
   const progressBar = document.querySelector(".progress-bar");
   const progressFill = document.querySelector(".progress-bar-fill");
+  const customExpansions = document.getElementById("customExpansions");
+  const toggleExpander = document.getElementById("toggleExpander");
   chrome.storage.local.get(
     ["enabled", "correctionsCount", "wordsImproved"],
     (result) => {
@@ -26,8 +28,26 @@ document.addEventListener("DOMContentLoaded", async function () {
   chrome.storage.sync.get(["enableTTS"], (result) => {
     toggleTTS.checked = result.enableTTS !== false;
   });
+  chrome.storage.sync.get(["enableExpander", "customExpansions"], (result) => {
+    toggleExpander.checked = result.enableExpander || false;
+    if (result.customExpansions) {
+        customExpansions.value = result.customExpansions;
+    }
+  });
   toggleTTS.addEventListener("change", function () {
     chrome.storage.sync.set({ enableTTS: this.checked });
+  });
+
+  toggleExpander.addEventListener("change", function() {
+    chrome.storage.sync.set({ 
+        enableExpander: this.checked 
+    });
+  });
+
+  customExpansions.addEventListener("change", function() {
+    chrome.storage.sync.set({ 
+        customExpansions: this.value 
+    });
   });
   
   toggle.addEventListener("change", function () {
@@ -44,6 +64,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       });
     });
   });
+
   summarizeBtn.addEventListener("click", async function() {
     try {
       summarizeBtn.disabled = true;
@@ -104,6 +125,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       progressFill.style.width = '0%';
     }
   });
+
   copySummaryBtn.addEventListener("click", function() {
     if (summaryText.textContent) {
       navigator.clipboard.writeText(summaryText.textContent).then(() => {
@@ -126,12 +148,15 @@ document.addEventListener("DOMContentLoaded", async function () {
       });
     }
   });
+
   closeSummaryBtn.addEventListener("click", function() {
     summaryContainer.classList.remove('show');
     summaryPlaceholder.style.display = 'block';
     summaryText.style.display = 'none';
   });
+
   checkAIStatus();
+
   chrome.storage.onChanged.addListener((changes, namespace) => {
     if (namespace === 'local') {
       if (changes.correctionsCount) {
@@ -142,6 +167,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       }
     }
   });
+
   function resetSummarizeButton() {
     summarizeBtn.disabled = false;
     summarizeBtn.classList.remove('loading');

@@ -54,8 +54,124 @@ class AIEngine {
       },
     };
 
+    // Text Expander properties
+    this.expanderEnabled = false;
+    this.customExpansions = new Map();
+    this.defaultExpansions = new Map([
+      ['thanks', 'thanks a lot'],
+      ['thx', 'thanks'],
+      ['ty', 'thank you'],
+      ['np', 'no problem'],
+      ['brb', 'be right back'],
+      ['omw', 'on my way'],
+      ['tbh', 'to be honest'],
+      ['imo', 'in my opinion'],
+      ['imho', 'in my humble opinion'],
+      ['fyi', 'for your information'],
+      ['asap', 'as soon as possible'],
+      ['btw', 'by the way'],
+      ['lol', 'laughing out loud'],
+      ['idk', "I don't know"],
+      ['afaik', 'as far as I know'],
+      ['irl', 'in real life'],
+      ['pls', 'please'],
+      ['u', 'you'],
+      ['r', 'are'],
+      ['yr', 'your'],
+      ['msg', 'message'],
+      ['info', 'information'],
+      ['doc', 'document'],
+      ['approx', 'approximately'],
+      ['appt', 'appointment']
+    ]);
+
     this.initializeOfflineChecker();
+    this.initializeExpander();
   }
+
+  initializeExpander() {
+    this.loadExpanderPreferences();
+  }
+
+  async loadExpanderPreferences() {
+    try {
+      const result = await new Promise((resolve) => {
+        chrome.storage.sync.get(["enableExpander", "customExpansions"], resolve);
+      });
+      
+      this.expanderEnabled = result.enableExpander || false;
+      this.loadCustomExpansions(result.customExpansions);
+    } catch (error) {
+      console.log("Could not load expander preferences:", error);
+      this.expanderEnabled = false;
+    }
+  }
+
+  loadCustomExpansions(customExpansionsText) {
+    this.customExpansions.clear();
+    
+    if (!customExpansionsText) return;
+    
+    const lines = customExpansionsText.split('\n');
+    lines.forEach(line => {
+      const trimmedLine = line.trim();
+      if (trimmedLine && trimmedLine.includes('=')) {
+        const [shortcut, expansion] = trimmedLine.split('=').map(part => part.trim());
+        if (shortcut && expansion) {
+          this.customExpansions.set(shortcut.toLowerCase(), expansion);
+        }
+      }
+    });
+  }
+  expandText(text) {
+    if (!text || !this.expanderEnabled) return null;
+    
+    const words = text.trim().split(/\s+/);
+    if (words.length === 0) return null;
+    const lastWord = words[words.length - 1].toLowerCase();
+    let expansion = this.customExpansions.get(lastWord) || 
+                   this.defaultExpansions.get(lastWord);
+    
+    if (expansion) {
+      words[words.length - 1] = expansion;
+      const expandedText = words.join(' ');
+      
+      return {
+        original: text,
+        expanded: expandedText,
+        shortcut: lastWord,
+        expansion: expansion,
+        source: "expander"
+      };
+    }
+    
+    return null;
+  }
+  getAllExpansions() {
+    const allExpansions = new Map([...this.defaultExpansions, ...this.customExpansions]);
+    return Array.from(allExpansions.entries()).map(([shortcut, expansion]) => ({
+      shortcut,
+      expansion
+    }));
+  }
+  async setExpanderSettings(enabled, customExpansionsText) {
+    this.expanderEnabled = enabled;
+    this.loadCustomExpansions(customExpansionsText);
+    
+    try {
+      await chrome.storage.sync.set({
+        enableExpander: enabled,
+        customExpansions: customExpansionsText
+      });
+    } catch (error) {
+      console.log("Could not save expander settings:", error);
+    }
+  }
+
+  isExpanderEnabled() {
+    return this.expanderEnabled;
+  }
+
   getAvailableTones() {
     return Object.keys(this.writingStyleConfig);
   }
@@ -67,12 +183,15 @@ class AIEngine {
   getToneDescription(toneKey) {
     return this.writingStyleConfig[toneKey]?.description || "";
   }
+
   getToneConfigurations() {
     return this.writingStyleConfig;
   }
+
   isValidTone(tone) {
     return tone in this.writingStyleConfig;
   }
+
   setCurrentTone(tone) {
     if (this.writingStyleConfig[tone]) {
       this.currentWritingStyle = tone;
@@ -81,7 +200,6 @@ class AIEngine {
       } catch (error) {
         console.log("Could not save tone preference:", error);
       }
-
       return true;
     }
     return false;
@@ -106,6 +224,7 @@ class AIEngine {
       console.log("Could not load tone preference:", error);
     }
   }
+
   initializeOfflineChecker() {
     this.offlineChecker = {
       rules: [
@@ -300,6 +419,7 @@ class AIEngine {
 
   async initialize() {
     await this.loadTonePreference();
+    await this.loadExpanderPreferences();
 
     if (!this.isChromeAIAvailable()) {
       console.log("AI APIs not available in this browser");
@@ -363,6 +483,7 @@ class AIEngine {
       return false;
     }
   }
+
   async getAISuggestions(text, tone = null) {
     if (!this.rewriterInstance || this.isDownloading) return null;
     const selectedTone = tone || this.currentWritingStyle;
@@ -420,76 +541,88 @@ class AIEngine {
     return null;
   }
 
-applyBasicToneAdjustments(text, tone) {
-  let adjustedText = text;
-  
-  if (tone === "casual") {
+  applyBasicToneAdjustments(text, tone) {
+    let adjustedText = text;
+
+    if (tone === "casual") {
       adjustedText = adjustedText
-          .replace(/\bI am\b/g, "I'm")
-          .replace(/\bdo not\b/g, "don't")
-          .replace(/\bcannot\b/g, "can't")
-          .replace(/\bwill not\b/g, "won't")
-          .replace(/\bit is\b/g, "it's")
-          .replace(/\bthat is\b/g, "that's")
-          .replace(/\bwe are\b/g, "we're")
-          .replace(/\bthey are\b/g, "they're");
-  } else if (tone === "concise") {
+        .replace(/\bI am\b/g, "I'm")
+        .replace(/\bdo not\b/g, "don't")
+        .replace(/\bcannot\b/g, "can't")
+        .replace(/\bwill not\b/g, "won't")
+        .replace(/\bit is\b/g, "it's")
+        .replace(/\bthat is\b/g, "that's")
+        .replace(/\bwe are\b/g, "we're")
+        .replace(/\bthey are\b/g, "they're");
+    } else if (tone === "concise") {
       adjustedText = adjustedText
-          .replace(/\bdue to the fact that\b/g, "because")
-          .replace(/\bin order to\b/g, "to")
-          .replace(/\bat this point in time\b/g, "now")
-          .replace(/\bwith regard to\b/g, "about")
-          .replace(/\bfor the purpose of\b/g, "for")
-          .replace(/\bin the event that\b/g, "if")
-          .replace(/\bprior to\b/g, "before");
-  } else if (tone === "professional") {
+        .replace(/\bdue to the fact that\b/g, "because")
+        .replace(/\bin order to\b/g, "to")
+        .replace(/\bat this point in time\b/g, "now")
+        .replace(/\bwith regard to\b/g, "about")
+        .replace(/\bfor the purpose of\b/g, "for")
+        .replace(/\bin the event that\b/g, "if")
+        .replace(/\bprior to\b/g, "before");
+    } else if (tone === "professional") {
       adjustedText = adjustedText
-          .replace(/\bget\b/g, "obtain")
-          .replace(/\bhelp\b/g, "assist")
-          .replace(/\bbuy\b/g, "purchase")
-          .replace(/\bshow\b/g, "demonstrate")
-          .replace(/\btell\b/g, "inform");
-  } else if (tone === "formal") {
+        .replace(/\bget\b/g, "obtain")
+        .replace(/\bhelp\b/g, "assist")
+        .replace(/\bbuy\b/g, "purchase")
+        .replace(/\bshow\b/g, "demonstrate")
+        .replace(/\btell\b/g, "inform");
+    } else if (tone === "formal") {
       adjustedText = adjustedText
-          .replace(/\bcan't\b/g, "cannot")
-          .replace(/\bwon't\b/g, "will not")
-          .replace(/\bdon't\b/g, "do not")
-          .replace(/\bit's\b/g, "it is")
-          .replace(/\bthat's\b/g, "that is");
+        .replace(/\bcan't\b/g, "cannot")
+        .replace(/\bwon't\b/g, "will not")
+        .replace(/\bdon't\b/g, "do not")
+        .replace(/\bit's\b/g, "it is")
+        .replace(/\bthat's\b/g, "that is");
+    }
+
+    return adjustedText;
   }
-  
-  return adjustedText;
-}
 
   getOfflineSuggestions(text, tone = null) {
     if (!this.offlineChecker) return null;
 
     try {
-        const suggestion = this.offlineChecker.checkText(text);
-        if (suggestion) {
-            if (tone) {
-                suggestion.corrected = this.applyBasicToneAdjustments(suggestion.corrected, tone);
-            }
-            suggestion.tone = tone || this.currentWritingStyle;
-            suggestion.toneName = this.getToneDisplayName(tone || this.currentWritingStyle);
+      const suggestion = this.offlineChecker.checkText(text);
+      if (suggestion) {
+        if (tone) {
+          suggestion.corrected = this.applyBasicToneAdjustments(
+            suggestion.corrected,
+            tone
+          );
         }
-        return suggestion;
+        suggestion.tone = tone || this.currentWritingStyle;
+        suggestion.toneName = this.getToneDisplayName(
+          tone || this.currentWritingStyle
+        );
+      }
+      return suggestion;
     } catch (error) {
-        console.error("Offline checker error:", error);
-        return null;
+      console.error("Offline checker error:", error);
+      return null;
     }
-}
-async getSuggestions(text, tone = null) {
-  if (!text || text.trim().length < 3) return null;
-  const selectedTone = tone || this.currentWritingStyle;
+  }
 
-  if (!this.offlineMode && !this.isDownloading) {
+  async getSuggestions(text, tone = null) {
+    if (!text || text.trim().length < 3) return null;
+    const selectedTone = tone || this.currentWritingStyle;
+    if (this.expanderEnabled) {
+      const expansion = this.expandText(text);
+      if (expansion) {
+        return expansion;
+      }
+    }
+    if (!this.offlineMode && !this.isDownloading) {
       const aiSuggestion = await this.getAISuggestions(text, selectedTone);
       if (aiSuggestion) return aiSuggestion;
+    }
+    
+    const offlineSuggestion = this.getOfflineSuggestions(text, selectedTone);
+    return offlineSuggestion;
   }
-  const offlineSuggestion = this.getOfflineSuggestions(text, selectedTone);
-  return offlineSuggestion;
-}
 
   async getStatus() {
     if (!this.isChromeAIAvailable()) {
