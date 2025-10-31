@@ -116,21 +116,32 @@ class AIEngine {
     lines.forEach(line => {
       const trimmedLine = line.trim();
       if (trimmedLine && trimmedLine.includes('=')) {
-        const [shortcut, expansion] = trimmedLine.split('=').map(part => part.trim());
-        if (shortcut && expansion) {
-          this.customExpansions.set(shortcut.toLowerCase(), expansion);
+        const parts = trimmedLine.split('=');
+        if (parts.length >= 2) {
+          const shortcut = parts[0].trim().toLowerCase();
+          const expansion = parts.slice(1).join('=').trim(); // Handle = in expansion text
+          if (shortcut && expansion) {
+            this.customExpansions.set(shortcut, expansion);
+          }
         }
       }
     });
+    
+    console.log('Loaded custom expansions:', Array.from(this.customExpansions.entries()));
   }
   expandText(text) {
     if (!text || !this.expanderEnabled) return null;
-    
-    const words = text.trim().split(/\s+/);
-    if (words.length === 0) return null;
-    const lastWord = words[words.length - 1].toLowerCase();
-    let expansion = this.customExpansions.get(lastWord) || 
-                   this.defaultExpansions.get(lastWord);
+  
+  const words = text.trim().split(/\s+/);
+  if (words.length === 0) return null;
+  
+  const lastWord = words[words.length - 1].toLowerCase();
+  
+  console.log('Checking expansion for:', lastWord);
+  console.log('Custom expansions:', Array.from(this.customExpansions.keys()));
+  
+  let expansion = this.customExpansions.get(lastWord) || 
+                 this.defaultExpansions.get(lastWord);
     
     if (expansion) {
       words[words.length - 1] = expansion;

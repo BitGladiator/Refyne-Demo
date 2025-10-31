@@ -288,7 +288,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         aiEngine.getStatus().then(status => sendResponse(status));
         return true;
     }
-    
+    if (request.action === 'reloadExpanderSettings') {
+        aiEngine.loadExpanderPreferences();
+      }
     if (request.action === 'checkText' && request.text) {
         tooltipManager.showStatus("Checking selected text...", "info");
         aiEngine.getSuggestions(request.text).then(suggestion => {

@@ -714,7 +714,10 @@ class TooltipManager {
     this.setupCloseButton();
 
     if (window.aiEngine && source !== "offline") {
-      this.setupToneButtons(targetElement, suggestion.original, applyCallback);
+      this.setupToneButtons(targetElement, suggestion.original, (updatedSuggestion) => {
+        activeSuggestion = updatedSuggestion; 
+        applyCallback(updatedSuggestion);
+      });
     }
 
     this.setupClickHandler(applyCallback);
@@ -755,7 +758,7 @@ class TooltipManager {
             this.updateToneUIState(toneButtons, button);
             window.aiEngine.setCurrentTone(button.dataset.tone);
             this.setupClickHandler(() => {
-              applyCallback(newSuggestion);
+              applyCallback(newSuggestion); 
             });
             this.setupListenButton(newSuggestion.corrected);
           } else {

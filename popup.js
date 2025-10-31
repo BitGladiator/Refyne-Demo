@@ -49,6 +49,15 @@ document.addEventListener("DOMContentLoaded", async function () {
         customExpansions: this.value 
     });
   });
+  customExpansions.addEventListener("blur", function() {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0] && tabs[0].id) {
+        chrome.tabs.sendMessage(tabs[0].id, {
+          action: "reloadExpanderSettings"
+        }).catch(err => console.log("Failed to reload settings:", err));
+      }
+    });
+  });
   
   toggle.addEventListener("change", function () {
     const isEnabled = this.checked;
